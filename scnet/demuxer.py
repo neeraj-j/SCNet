@@ -144,7 +144,7 @@ def parse_args():
     parser.add_argument(
         "--config_path",
         type=str,
-        default="./conf/config.yaml",
+        default="./conf/config_large.yaml",
         help="Path to configuration file",
     )
     parser.add_argument(
