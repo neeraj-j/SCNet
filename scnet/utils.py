@@ -8,6 +8,7 @@ import julius
 from pathlib import Path
 from contextlib import contextmanager
 
+
 # Audio
 def convert_audio_channels(wav, channels=2):
     """Convert audio to the given number of channels."""
@@ -22,18 +23,21 @@ def convert_audio_channels(wav, channels=2):
         if src_channels > 1:
             wav = wav.mean(dim=-2, keepdim=True)
     elif src_channels == 1:
-        wav = wav.expand(-1, channels, -1)
+        wav = wav.expand(channels, -1)
     elif src_channels >= channels:
         wav = wav[..., :channels, :]
     else:
-        raise ValueError('The audio file has less channels than requested but is not mono.')
+        raise ValueError(
+            "The audio file has less channels than requested but is not mono."
+        )
     return wav
+
 
 def convert_audio(wav, from_samplerate, to_samplerate, channels):
     """Convert audio from a given samplerate to a target one and target number of channels."""
     # Convert channels first
     wav = convert_audio_channels(wav, channels)
-    
+
     # Resample audio if necessary
     if from_samplerate != to_samplerate:
         wav = julius.resample_frac(wav, from_samplerate, to_samplerate)
@@ -42,29 +46,31 @@ def convert_audio(wav, from_samplerate, to_samplerate, channels):
 
 # model
 def load_model(model, checkpoint_path):
-        checkpoint_path = Path(checkpoint_path)
+    checkpoint_path = Path(checkpoint_path)
 
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"No model checkpoint file found at {checkpoint_path}")
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(f"No model checkpoint file found at {checkpoint_path}")
 
-        checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(checkpoint_path, map_location=torch.device("cpu"))
 
-        if 'best_state' not in checkpoint:
-            raise KeyError(f"Checkpoint does not contain the state")
-            
-        state_dict = checkpoint['best_state']
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            if k.startswith('module.'):
-               new_state_dict[k[7:]] = v
-            else:
-               new_state_dict[k] = v
+    if "best_state" not in checkpoint:
+        raise KeyError(f"Checkpoint does not contain the state")
 
-        model.load_state_dict(new_state_dict)
-        return model
+    state_dict = checkpoint["best_state"]
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if k.startswith("module."):
+            new_state_dict[k[7:]] = v
+        else:
+            new_state_dict[k] = v
+
+    model.load_state_dict(new_state_dict)
+    return model
+
 
 def copy_state(state):
     return {k: v.cpu().clone() for k, v in state.items()}
+
 
 @contextmanager
 def swap_state(model, state):
@@ -83,7 +89,8 @@ def swap_state(model, state):
     finally:
         model.load_state_dict(old_state)
 
-#other
+
+# other
 @contextmanager
 def temp_filenames(count: int, delete=True):
     names = []
@@ -95,6 +102,7 @@ def temp_filenames(count: int, delete=True):
         if delete:
             for name in names:
                 os.unlink(name)
+
 
 def center_trim(tensor: torch.Tensor, reference: tp.Union[torch.Tensor, int]):
     """
@@ -111,8 +119,9 @@ def center_trim(tensor: torch.Tensor, reference: tp.Union[torch.Tensor, int]):
     if delta < 0:
         raise ValueError("tensor must be larger than reference. " f"Delta is {delta}.")
     if delta:
-        tensor = tensor[..., delta // 2:-(delta - delta // 2)]
+        tensor = tensor[..., delta // 2 : -(delta - delta // 2)]
     return tensor
+
 
 def EMA(beta: float = 1):
     """
@@ -132,7 +141,9 @@ def EMA(beta: float = 1):
             total[key] = total[key] * beta + weight * float(value)
             fix[key] = fix[key] * beta + weight
         return {key: tot / fix[key] for key, tot in total.items()}
+
     return _update
+
 
 class DummyPoolExecutor:
     class DummyResult:
@@ -156,6 +167,7 @@ class DummyPoolExecutor:
     def __exit__(self, exc_type, exc_value, exc_tb):
         return
 
+
 # metric
 def new_sdr(references, estimates):
     """
@@ -170,5 +182,3 @@ def new_sdr(references, estimates):
     den += delta
     scores = 10 * torch.log10(num / den)
     return scores
-
-

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from collections import deque
-from .separation import SeparationNet
+from scnet.separation import SeparationNet
 import typing as tp
 import math
 
@@ -264,6 +264,7 @@ class SCNet(nn.Module):
                  # Dual-path RNN
                  num_dplayer = 6,
                  expand = 1,
+                 freq_reduce=False,
                 ):
         super().__init__()
         self.sources = sources
@@ -284,7 +285,7 @@ class SCNet(nn.Module):
             'center': True,
             'normalized': normalized
         }
-
+        self.freq_reduce = freq_reduce
         self.encoder = nn.ModuleList()
         self.decoder = nn.ModuleList()
         
@@ -330,9 +331,15 @@ class SCNet(nn.Module):
         x = x.reshape(-1, L)
         x = torch.stft(x, **self.stft_config, return_complex=True)
         x = torch.view_as_real(x)
+        # remove half freqs
+        fr = x.shape[1]
+        if self.freq_reduce:   # Neeraj
+            x = x[:, :fr//2, ...]
+
         x = x.permute(0, 3, 1, 2).reshape(x.shape[0]//self.audio_channels, x.shape[3]*self.audio_channels, x.shape[1], x.shape[2])
     
         B, C, Fr, T = x.shape
+
         mean = x.mean(dim=(1, 2, 3), keepdim=True)
         std = x.std(dim=(1, 2, 3), keepdim=True)
         x = (x - mean) / (1e-5 + std)
@@ -360,6 +367,9 @@ class SCNet(nn.Module):
         x = x.view(B, n, -1, Fr, T) 
         x = x * std[:, None] + mean[:, None]
         x = x.reshape(-1, 2, Fr, T).permute(0, 2, 3, 1)
+        if self.freq_reduce:
+            pad_len = fr - Fr
+            x = torch.nn.functional.pad(x, (0,0, 0,0, 0, pad_len))
         x = torch.view_as_complex(x.contiguous())
         x = torch.istft(x, **self.stft_config)
         x = x.reshape(B, len(self.sources), self.audio_channels, -1)
