@@ -1,6 +1,6 @@
 Official version is available - [here](https://github.com/starrytong/SCNet)
 
-This version of SCNet is optimized for vocal/instrumental separation, it has only 2 stems. Frequencies above 22K are discarded. It uses large verion of SCNet.
+This version of SCNet is optimized for vocal/instrumental separation, it has only 2 stems. Frequencies above 22K are discarded. It uses large verion of SCNet. Campare it with hosted solutions.
 
 Trained model is available [here](https://drive.google.com/file/d/1P9nQPuhu455IKtC5vvuBiG2YN2qExsrC/view?usp=sharing). 
 
