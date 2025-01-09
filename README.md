@@ -1,3 +1,17 @@
+Official version is available - [here](https://github.com/starrytong/SCNet)
+
+This version of SCNet is optimized for vocal/instrumental separation, it has only 2 stems. Frequencies above 22K are discarded. It uses large verion of SCNet.
+
+Download the trained model weights from [here](https://drive.google.com/file/d/1P9nQPuhu455IKtC5vvuBiG2YN2qExsrC/view?usp=sharing). 
+
+Usage:
+
+```bash
+python -m scnet.demuxer --input_dir path/to/test/dir --output_dir path/to/save/result/ --checkpoint_path path/to/model_ema.pt
+```
+
+------------------- Original -----------------------------------------
+
 # SCNet
 
 This repository is the official implementation of [SCNet: Sparse Compression Network for Music Source Separation](https://arxiv.org/abs/2401.13276)
