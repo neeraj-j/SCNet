@@ -1,6 +1,5 @@
 data:
-  # yt_dlp , csd - vocal
-  # synthsod, indian - instrumental
+  # large configuration
   wav: /home/nj/projects/music/data/dset/combined22k 
   samplerate: 44100
   datasr: 22050
